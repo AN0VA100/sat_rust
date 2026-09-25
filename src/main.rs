@@ -33,9 +33,7 @@ pub enum Token{
     RParentesis,
 }
 
-pub fn procces_input(atoms: &mut Vec<i32>, data: &mut Vec<i32>, index_atoms: &mut Vec<i32>, n_variables: &mut i32, token_input: &[Token]){
-
-    const DESP: i32 = 97;
+pub fn procces_input(data: &mut Vec<i32>, index_atoms: &mut Vec<i32>, n_variables: &mut i32, token_input: &[Token]){
 
     for token in token_input{
 
@@ -43,14 +41,12 @@ pub fn procces_input(atoms: &mut Vec<i32>, data: &mut Vec<i32>, index_atoms: &mu
 
             Token::Var(c) =>{
 
-                if((*c as i32) - DESP == 0){
+                if !index_atoms.contains(&(*c as i32)) {
 
                     *n_variables = *n_variables + 1;
 
                 }
 
-                atoms[((*c as i32) - DESP) as usize] = atoms[((*c as i32) - DESP) as usize] + 1;
-                
                 data.push(0);
                 index_atoms.push(*c as i32)
 
@@ -72,13 +68,12 @@ fn polaca_inversa(input: &[i32], index_atoms: &mut Vec<i32>) -> Vec<i32>{
 
     let mut stack: Vec<i32> = Vec::new();
     let mut output: Vec<i32> = Vec::new();
-    let mut index_atomsP: Vec<i32> = vec![0; input.len()];
+    let mut index_atomsP: Vec<i32> = Vec::new();
 
     let mut ii: usize = 0;
+    let mut io: usize = 0;
     let mut n_p_open: usize = 0;
     let mut p_open: bool = false;
-
-
 
     for t_i in input{
 
@@ -90,7 +85,7 @@ fn polaca_inversa(input: &[i32], index_atoms: &mut Vec<i32>) -> Vec<i32>{
                 
             */
 
-            index_atomsP[output.len()] = index_atoms[ii];
+            index_atomsP.push(index_atoms[ii]);
             output.push(*t_i);
 
             ii += 1;
@@ -108,8 +103,6 @@ fn polaca_inversa(input: &[i32], index_atoms: &mut Vec<i32>) -> Vec<i32>{
             p_open = true;
             n_p_open += 1;
 
-            ii += 1;
-
         }else if(p_open && *t_i != 6){
 
             if(*t_i == 5){
@@ -120,11 +113,9 @@ fn polaca_inversa(input: &[i32], index_atoms: &mut Vec<i32>) -> Vec<i32>{
 
             stack.push(*t_i);
 
-            ii += 1;
-
         }else if(*t_i == 6){
 
-            while(!stack.is_empty() && stack.last().copied().unwrap_or(0) != 5){
+            while(!stack.is_empty() && stack.last().copied().unwrap_or(-1) != 5){
 
                 output.push(stack.pop().unwrap());
 
@@ -132,8 +123,6 @@ fn polaca_inversa(input: &[i32], index_atoms: &mut Vec<i32>) -> Vec<i32>{
 
             stack.pop();
             n_p_open -= 1;
-
-            ii += 1;
 
             if(n_p_open == 0){
 
@@ -148,13 +137,9 @@ fn polaca_inversa(input: &[i32], index_atoms: &mut Vec<i32>) -> Vec<i32>{
                 output.push(stack.pop().unwrap());
                 stack.push(*t_i);
 
-                ii += 1;
-
             }else{
 
-                output.push(*t_i);
-
-                ii += 1;
+                stack.push(*t_i);
 
             }
 
@@ -179,7 +164,6 @@ fn main(){
 
     let expresion = r"( ( p \rightarrow q ) \wedge ( q \rightarrow r) ) \rightarrow ( p \rightarrow r)";
 
-    let mut atoms: Vec<i32> =  vec![0; 26];
     let mut data: Vec<i32> = Vec::new();
     let mut index_atoms: Vec<i32> = Vec::new();
 
@@ -187,7 +171,7 @@ fn main(){
 
     let token_input: Vec<Token> = Token::lexer(expresion).collect::<Result<Vec<Token>, _>>().unwrap();
 
-    procces_input(&mut atoms, &mut data, &mut index_atoms, &mut n_variables, &token_input);
+    procces_input(&mut data, &mut index_atoms, &mut n_variables, &token_input);
 
     for i in &data {
 
